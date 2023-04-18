@@ -12,6 +12,7 @@
         "component",
         "workspace",
         "env",
+        "graphql-client",
         "cli",
         "hooks",
         "i18n",
