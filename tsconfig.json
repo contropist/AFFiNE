@@ -54,7 +54,7 @@
       "path": "./packages/env"
     },
     {
-      "path": "./packages/graphql-client"
+      "path": "./packages/graphql"
     },
     {
       "path": "./packages/debug"
