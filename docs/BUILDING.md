@@ -1,5 +1,10 @@
 # Building AFFiNE Web
 
+> **Warning**:
+>
+> This document has not been updated for a while.
+> If you find any outdated information, please feel free to open an issue or submit a PR.
+
 > **Note**
 > For developing & building desktop client app, please refer to [building-desktop-client-app.md](./building-desktop-client-app.md)
 
@@ -12,32 +17,39 @@
 
 ## Prerequisites
 
+AFFiNE client has both **Node.js** & **Rust** toolchains.
+
+### Install Node.js
+
 We suggest develop our product under node.js LTS(Long-term support) version
 
-### Option 1: Manually install node.js
+#### Option 1: Manually install node.js
 
 install [Node LTS version](https://nodejs.org/en/download)
 
 > Up to now, the major node.js version is 18.x
 
-### Option 2: Use node version manager
+#### Option 2: Use node version manager
 
-install [nvm](https://github.com/nvm-sh/nvm)
+install [fnm](https://github.com/Schniz/fnm)
 
 ```sh
-nvm install 18
-nvm use 18
+fnm use
 ```
 
-## Setup Environment
+### Install Rust Tools
 
-This setup requires modern yarn (currently `3.5.0`), run this if your yarn version is `1.x`
+Please follow the official guide at https://www.rust-lang.org/tools/install.
+
+### Setup Node.js Environment
+
+This setup requires modern yarn (currently `4.x`), run this if your yarn version is `1.x`
 
 Reference: [Yarn installation doc](https://yarnpkg.com/getting-started/install)
 
 ```sh
 corepack enable
-corepack prepare yarn@3.5.0 --activate
+corepack prepare yarn@stable --activate
 ```
 
 ```sh
@@ -45,45 +57,53 @@ corepack prepare yarn@3.5.0 --activate
 yarn install
 ```
 
-## Start Development Server
+### Build Native Dependencies
 
-### Option 1: Local OctoBase
+Run the following script. It will build the native module at [`/packages/frontend/native`](/packages/frontend/native) and build Node.js binding using [NAPI.rs](https://napi.rs/).
+This could take a while if you build it for the first time.
+Note: use `strip` from system instead of `binutils` if you are running MacOS. [see problem here](https://github.com/toeverything/AFFiNE/discussions/2840)
 
-```shell
-# Run OctoBase container in background
-docker pull ghcr.io/toeverything/cloud-self-hosted:nightly-latest
-docker run --env=SIGN_KEY=test123 --env=RUST_LOG=debug --env=JWST_DEV=1 --env=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin --workdir=/app -p 3000:3000 --runtime=runc -d ghcr.io/toeverything/cloud-self-hosted:nightly-latest
+```
+yarn workspace @affine/native build
 ```
 
-```shell
-# Run AFFiNE Web in development mode
-yarn dev:local
+### Build Infra
+
+```sh
+yarn run build:infra
 ```
 
-### Option 2: Remote OctoBase
+### Build Plugins
 
-```shell
-yarn dev
+```sh
+yarn run build:plugins
 ```
 
-you might need set environment variables in `.env.local` file.
-See our [template](../apps/web/.env.local.template).
+### Build Server Dependencies
 
-Then, the playground page should work at [http://localhost:8080/](http://localhost:8080/)
-
-For more details, see [apps/web/README.md](../apps/web/README.md)
+```sh
+yarn workspace @affine/storage build
+```
 
 ## Testing
-
-> Local OctoBase is required for testing. Otherwise, the affine part of the tests will fail.
 
 Adding test cases is strongly encouraged when you contribute new features and bug fixes.
 
 We use [Playwright](https://playwright.dev/) for E2E test, and [vitest](https://vitest.dev/) for unit test.
+To test locally, please make sure browser binaries are already installed via `npx playwright install`.
+Also make sure you have built the `@affine/core` workspace before running E2E tests.
 
-To test locally, please make sure browser binaries are already installed via `npx playwright install`. Then there are multi commands to choose from:
+### Unit Test
 
 ```sh
-# run tests in headless mode in another terminal window
 yarn test
+```
+
+### E2E Test
+
+```shell
+# there are `affine-local`, `affine-migration`, `affine-local`, `affine-plugin`, `affine-prototype` e2e tests,
+#   which are run under different situations.
+cd tests/affine-local
+yarn e2e
 ```

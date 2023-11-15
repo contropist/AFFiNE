@@ -12,8 +12,8 @@ Use the table of contents icon on the top left corner of this document to get to
 
 Currently we have two versions of AFFiNE:
 
-- [AFFiNE Pre-Alpha](https://livedemo.affine.pro/). This version users the branch `Pre-Alpha`, it is no longer actively developed but contains some different functions and features.
-- [AFFiNE Alpha](https://pathfinder.affine.pro/). This version uses the `master` branch, this is the latest version under active development.
+- [AFFiNE Pre-Alpha](https://livedemo.affine.pro/). This version uses the branch `Pre-Alpha`, it is no longer actively developed but contains some different functions and features.
+- [AFFiNE Alpha](https://pathfinder.affine.pro/). This version uses the `canary` branch, this is the latest version under active development.
 
 To get an overview of the project, read the [README](../README.md). Here are some resources to help you get started with open source contributions:
 
@@ -90,4 +90,4 @@ Congratulations :tada::tada: The AFFiNE team thanks you :sparkles:.
 
 Once your PR is merged, your contributions will be publicly visible on our GitHub.
 
-Now that you are part of the AFFiNE community, see how else you can join and help over at [Gitbook](https://docs.affine.pro/affine/)
+Now that you are part of the AFFiNE community, see how else you can join and help over at [GitBook](https://docs.affine.pro/affine/)

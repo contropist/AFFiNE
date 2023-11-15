@@ -1,168 +1,112 @@
 name: Build & Test
 
 on:
-  pull_request:
+  push:
     branches:
-      - master
+      - canary
+      - v[0-9]+.[0-9]+.x-staging
+      - v[0-9]+.[0-9]+.x
+    paths-ignore:
+      - README.md
+      - .github/**
+      - '!.github/workflows/build.yml'
+      - '!.github/actions/build-rust/action.yml'
+      - '!.github/actions/setup-node/action.yml'
+  pull_request:
+  merge_group:
+    branches:
+      - canary
+      - v[0-9]+.[0-9]+.x-staging
+      - v[0-9]+.[0-9]+.x
+    paths-ignore:
+      - README.md
+      - .github/**
+      - '!.github/workflows/build.yml'
+      - '!.github/actions/build-rust/action.yml'
+      - '!.github/actions/setup-node/action.yml'
+
+env:
+  DEBUG: napi:*
+  BUILD_TYPE: canary
+  APP_NAME: affine
+  AFFINE_ENV: dev
+  COVERAGE: true
+  DISTRIBUTION: browser
+  MACOSX_DEPLOYMENT_TARGET: '10.13'
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    environment: development
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - name: Run oxlint
+        # oxlint is fast, so wrong code will fail quickly
+        run: yarn dlx oxlint@latest .
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
-      - run: yarn lint --max-warnings=0
-
-  install-all:
-    name: Install All Dependencies
-    runs-on: ubuntu-latest
-    environment: development
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install All Dependencies
-        uses: ./.github/actions/setup-node
-
-  build-storybook:
-    name: Build Storybook
-    runs-on: ubuntu-latest
-    environment: development
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: ./.github/actions/setup-node
-      - run: yarn build:storybook
-      - name: Upload storybook artifact
-        uses: actions/upload-artifact@v3
         with:
-          name: storybook
-          path: ./packages/component/storybook-static
-          if-no-files-found: error
-
-  build:
-    name: Build @affine/web
-    runs-on: ubuntu-latest
-    environment: development
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: ./.github/actions/setup-node
-      - name: Cache Next.js
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ github.workspace }}/apps/web/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/yarn.lock') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/yarn.lock') }}-
-      - name: Build
-        run: yarn build
-        env:
-          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
-          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
-          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
-          API_SERVER_PROFILE: local
-          ENABLE_DEBUG_PAGE: true
-          COVERAGE: true
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: next-js
-          path: ./apps/web/.next
-          if-no-files-found: error
-
-  server-test:
-    name: Server Test
-    runs-on: ubuntu-latest
-    environment: development
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: affine
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: ./.github/actions/setup-node
-      - name: Initialize database
+          electron-install: false
+      - name: Run i18n codegen
+        run: yarn i18n-codegen gen
+      - name: Run ESLint
+        run: yarn lint:eslint --max-warnings=0
+      - name: Run Prettier
+        # Set nmMode in `actions/setup-node` will modify the .yarnrc.yml
         run: |
-          psql -h localhost -U postgres -c "CREATE DATABASE affine;"
-          psql -h localhost -U postgres -c "CREATE USER affine WITH PASSWORD 'affine';"
-          psql -h localhost -U postgres -c "ALTER USER affine WITH SUPERUSER;"
-        env:
-          PGPASSWORD: affine
-      - name: Generate prisma client
-        run: |
-          yarn exec prisma generate
-          yarn exec prisma db push
-        working-directory: apps/server
-        env:
-          DATABASE_URL: postgresql://affine:affine@localhost:5432/affine
-      - name: Run init-db script
-        run: yarn exec ts-node-esm ./scripts/init-db.ts
-        working-directory: apps/server
-        env:
-          DATABASE_URL: postgresql://affine:affine@localhost:5432/affine
-      - name: Run server tests
-        run: yarn test:coverage
-        working-directory: apps/server
-        env:
-          DATABASE_URL: postgresql://affine:affine@localhost:5432/affine
-      - name: Upload server test coverage results
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./apps/server/.coverage/lcov.info
-          flags: server-test
-          name: affine
-          fail_ci_if_error: true
+          git checkout .yarnrc.yml
+          yarn lint:prettier
+      - name: Run circular
+        run: yarn circular
+      - name: Run Type Check
+        run: yarn typecheck
 
-  storybook-test:
-    name: Storybook Test
+  check-yarn-binary:
+    name: Check yarn binary
     runs-on: ubuntu-latest
-    environment: development
-    needs: [build-storybook]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - name: Run check
+        run: |
+          yarn set version $(node -e "console.log(require('./package.json').packageManager.split('@')[1])")
+          git diff --exit-code
+
+  e2e-plugin-test:
+    name: E2E Plugin Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
         with:
           playwright-install: true
-      - name: Download storybook artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: storybook
-          path: ./packages/component/storybook-static
-      - name: Run storybook tests
-        working-directory: ./packages/component
-        run: |
-          yarn exec concurrently -k -s first -n "SB,TEST" -c "magenta,blue" "yarn exec serve ./storybook-static -l 6006" "yarn exec wait-on tcp:6006 && yarn test-storybook --coverage"
-      - name: Upload storybook test coverage results
+          electron-install: false
+      - name: Run playwright tests
+        run: yarn e2e --forbid-only
+        working-directory: tests/affine-plugin
+        env:
+          COVERAGE: true
+      - name: Collect code coverage report
+        run: yarn exec nyc report -t .nyc_output --report-dir .coverage --reporter=lcov
+
+      - name: Upload e2e test coverage results
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./packages/component/coverage/storybook/coverage-storybook.json
-          flags: storybook-test
+          files: ./.coverage/lcov.info
+          flags: e2e-plugin-test
           name: affine
-          fail_ci_if_error: true
+          fail_ci_if_error: false
+
+      - name: Upload test results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-e2e-plugin
+          path: ./test-results
+          if-no-files-found: ignore
 
   e2e-test:
     name: E2E Test
@@ -170,43 +114,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
-    environment: development
-    needs: [build, build-storybook]
-    services:
-      octobase:
-        image: ghcr.io/toeverything/cloud-self-hosted:nightly-latest
-        ports:
-          - 3000:3000
-        env:
-          SIGN_KEY: 'test123'
-          RUST_LOG: 'debug'
-          JWST_DEV: '1'
-
+        shard: [1, 2, 3, 4, 5]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
         with:
           playwright-install: true
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: next-js
-          path: ./apps/web/.next
-
-      - name: Download storybook artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: storybook
-          path: ./packages/component/storybook-static
-
-      - name: Wait for Octobase Ready
-        run: |
-          node ./scripts/wait-3000-healthz.mjs
+          electron-install: false
 
       - name: Run playwright tests
-        run: yarn test --forbid-only --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        run: yarn e2e --forbid-only --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        working-directory: tests/affine-local
         env:
           COVERAGE: true
 
@@ -220,37 +139,57 @@ jobs:
           files: ./.coverage/lcov.info
           flags: e2etest
           name: affine
-          fail_ci_if_error: true
+          fail_ci_if_error: false
 
       - name: Upload test results
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: test-results-e2e-${{ matrix.shard }}
           path: ./test-results
           if-no-files-found: ignore
 
+  e2e-migration-test:
+    name: E2E Migration Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node
+        with:
+          playwright-install: true
+          electron-install: false
+
+      - name: Run playwright tests
+        run: yarn workspace @affine-test/affine-migration e2e --forbid-only
+
+      - name: Upload test results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-e2e-migration
+          path: ./tests/affine-migration/test-results
+          if-no-files-found: ignore
+
   unit-test:
     name: Unit Test
     runs-on: ubuntu-latest
-    environment: development
-    services:
-      octobase:
-        image: ghcr.io/toeverything/cloud-self-hosted:nightly-latest
-        ports:
-          - 3000:3000
-        env:
-          SIGN_KEY: 'test123'
-          RUST_LOG: 'debug'
-          JWST_DEV: '1'
-
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
+        with:
+          electron-install: false
+
+      - name: Build AFFiNE native
+        uses: ./.github/actions/build-rust
+        with:
+          target: x86_64-unknown-linux-gnu
+          package: '@affine/native'
+          nx_token: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
       - name: Unit Test
-        run: yarn run test:unit:coverage
+        run: yarn nx test:coverage @affine/monorepo
 
       - name: Upload unit test coverage results
         uses: codecov/codecov-action@v3
@@ -259,4 +198,4 @@ jobs:
           files: ./.coverage/store/lcov.info
           flags: unittest
           name: affine
-          fail_ci_if_error: true
+          fail_ci_if_error: false

@@ -1,73 +1,210 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    // Classification follows https://www.typescriptlang.org/tsconfig
+
+    // Type Checking
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "node",
+    "exactOptionalPropertyTypes": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "noUncheckedIndexedAccess": false,
+    "useUnknownInCatchVariables": true,
+
+    // Modules
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "types": ["affine__env"],
+    // Emit
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    // skip type emit for @internal types
+    // "stripInternal": true,
+
+    // JavaScript Support
+    "allowJs": false,
+    "checkJs": false,
+
+    // Interop Constraints
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
+
+    // Language and Environment
     "jsx": "preserve",
-    "incremental": true,
+    "jsxImportSource": "@emotion/react",
+    "lib": ["ESNext", "DOM"],
+    "target": "ES2022",
+    "useDefineForClassFields": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "baseUrl": ".",
+
+    // Projects
+    "composite": true,
+    "incremental": true,
+
+    // Completeness
+    "skipLibCheck": true, // skip all type checks for .d.ts files
     "paths": {
-      "@affine/component": ["./packages/component/src/index"],
-      "@affine/component/*": ["./packages/component/src/components/*/index"],
-      "@affine/templates/*": ["./packages/templates/src/*"],
-      "@affine/i18n": ["./packages/i18n/src"],
-      "@affine/debug": ["./packages/debug"],
-      "@affine/jotai": ["./packages/jotai"],
-      "@affine/env": ["./packages/env"],
-      "@affine/env/*": ["./packages/env/src/*"],
-      "@affine/utils": ["./packages/utils"],
-      "@affine/workspace/*": ["./packages/workspace/src/*"],
+      "@affine/core/*": ["./packages/frontend/core/src/*"],
+      "@affine/cli/*": ["./tools/cli/src/*"],
+      "@affine/server/*": ["./packages/backend/server/src/*"],
+      "@affine/component": ["./packages/frontend/component/src/index"],
+      "@affine/component/*": [
+        "./packages/frontend/component/src/components/*/index",
+        "./packages/frontend/component/src/components/*"
+      ],
+      "@affine/i18n": ["./packages/frontend/i18n/src"],
+      "@affine/i18n/hooks": ["./packages/frontend/i18n/src/i18n-generated"],
+      "@affine/debug": ["./packages/common/debug"],
+      "@affine/env": ["./packages/common/env/src"],
+      "@affine/env/*": ["./packages/common/env/src/*"],
+      "@affine/workspace/*": ["./packages/frontend/workspace/src/*"],
+      "@affine/graphql": ["./packages/frontend/graphql/src"],
+      "@affine/copilot": ["./packages/plugins/copilot/src"],
+      "@affine/copilot/*": ["./packages/plugins/copilot/src/*"],
+      "@affine/electron/scripts/*": ["./packages/frontend/electron/scripts/*"],
+      "@affine-test/kit/*": ["./tests/kit/*"],
       "@affine-test/fixtures/*": ["./tests/fixtures/*"],
-      "@toeverything/y-indexeddb": ["./packages/y-indexeddb/src"],
-      "@toeverything/hooks/*": ["./packages/hooks/src/*"]
+      "@toeverything/y-indexeddb": ["./packages/common/y-indexeddb/src"],
+      "@toeverything/hooks/*": ["./packages/frontend/hooks/src/*"],
+      "@toeverything/infra/*": ["./packages/common/infra/src/*"],
+      "@affine/sdk/*": ["./packages/common/sdk/src/*"],
+      "@affine/native": ["./packages/frontend/native/index.d.ts"],
+      "@affine/native/*": ["./packages/frontend/native/*"],
+      "@affine/storage": ["./packages/backend/storage/index.d.ts"],
+
+      // Development only
+      "@affine/electron/*": ["./packages/frontend/electron/src/*"]
     }
   },
+  "include": [],
   "references": [
+    // Backend
     {
-      "path": "./tests"
+      "path": "./packages/backend/server"
     },
     {
-      "path": "./apps/web"
+      "path": "./packages/backend/server/tests"
+    },
+    // Frontend
+    {
+      "path": "./packages/frontend/component"
     },
     {
-      "path": "./packages/component"
+      "path": "./packages/frontend/core"
     },
     {
-      "path": "./packages/hooks"
+      "path": "./packages/frontend/electron/tsconfig.test.json"
     },
     {
-      "path": "./packages/i18n"
+      "path": "./packages/frontend/graphql"
     },
     {
-      "path": "./packages/env"
+      "path": "./packages/frontend/hooks"
     },
     {
-      "path": "./packages/debug"
+      "path": "./packages/frontend/i18n"
     },
     {
-      "path": "./packages/workspace"
+      "path": "./packages/frontend/workspace"
+    },
+    // Common
+    {
+      "path": "./packages/common/cmdk"
     },
     {
-      "path": "./packages/y-indexeddb"
+      "path": "./packages/common/debug"
     },
     {
-      "path": "./tests/fixtures"
+      "path": "./packages/common/env"
     },
+    {
+      "path": "./packages/common/infra"
+    },
+    {
+      "path": "./packages/common/infra"
+    },
+    {
+      "path": "./packages/common/sdk"
+    },
+    {
+      "path": "./packages/common/y-indexeddb"
+    },
+    // Plugins
+    {
+      "path": "./packages/plugins/copilot"
+    },
+    {
+      "path": "./packages/plugins/hello-world"
+    },
+    {
+      "path": "./packages/plugins/image-preview"
+    },
+    {
+      "path": "./packages/plugins/vue-hello-world"
+    },
+    // Tools
+    {
+      "path": "./tools/cli"
+    },
+    {
+      "path": "./tools/plugin-cli"
+    },
+    // Tests
+    {
+      "path": "./tests/kit"
+    },
+    {
+      "path": "./tests/storybook"
+    },
+    {
+      "path": "./tests/affine-local"
+    },
+    {
+      "path": "./tests/affine-plugin"
+    },
+    {
+      "path": "./tests/affine-migration"
+    },
+    {
+      "path": "./tests/affine-legacy/0.7.0-canary.18"
+    },
+    {
+      "path": "./tests/affine-legacy/0.8.0-canary.7"
+    },
+    {
+      "path": "./tests/affine-cloud"
+    },
+    {
+      "path": "./tests/affine-desktop"
+    },
+    {
+      "path": "./tests/affine-legacy/0.8.4"
+    },
+    {
+      "path": "./tests/affine-legacy/0.6.1-beta.1"
+    },
+    // Others
     {
       "path": "./tsconfig.node.json"
     }
   ],
   "files": [],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "target", "lib", "test-results"],
+  "ts-node": {
+    "esm": true,
+    "compilerOptions": {
+      "module": "ESNext",
+      "moduleResolution": "Node"
+    }
+  }
 }

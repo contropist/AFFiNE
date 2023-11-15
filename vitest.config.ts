@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
-import react from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react-swc';
 import { defineConfig } from 'vitest/config';
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url));
@@ -12,28 +12,34 @@ export default defineConfig({
   assetsInclude: ['**/*.md'],
   resolve: {
     alias: {
-      'next/router': 'next-router-mock',
-      'next/config': resolve(rootDir, './scripts/vitest/next-config-mock.ts'),
+      // prevent tests using two different sources of yjs
+      yjs: resolve(rootDir, 'node_modules/yjs'),
     },
   },
   test: {
     setupFiles: [
-      resolve(rootDir, './scripts/setup/search.ts'),
+      resolve(rootDir, './scripts/setup/lit.ts'),
       resolve(rootDir, './scripts/setup/lottie-web.ts'),
+      resolve(rootDir, './scripts/setup/global.ts'),
     ],
     include: [
-      'packages/**/*.spec.ts',
-      'packages/**/*.spec.tsx',
-      'apps/web/**/*.spec.ts',
-      'apps/web/**/*.spec.tsx',
-      'tests/unit/**/*.spec.ts',
-      'tests/unit/**/*.spec.tsx',
+      resolve(rootDir, 'packages/common/**/*.spec.ts'),
+      resolve(rootDir, 'packages/common/**/*.spec.tsx'),
+      resolve(rootDir, 'packages/frontend/**/*.spec.ts'),
+      resolve(rootDir, 'packages/frontend/**/*.spec.tsx'),
+    ],
+    exclude: [
+      '**/node_modules',
+      '**/dist',
+      '**/build',
+      '**/out,',
+      '**/frontend/electron',
     ],
     testTimeout: 5000,
     coverage: {
       provider: 'istanbul', // or 'c8'
       reporter: ['lcov'],
-      reportsDirectory: '.coverage/store',
+      reportsDirectory: resolve(rootDir, '.coverage/store'),
     },
   },
 });

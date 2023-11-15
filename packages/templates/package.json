@@ -1,8 +1,0 @@
-{
-  "name": "@affine/templates",
-  "private": true,
-  "sideEffect": false,
-  "exports": {
-    "./*.md": "./src/*.md"
-  }
-}

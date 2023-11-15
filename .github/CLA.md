@@ -56,3 +56,9 @@ Example:
 - Skye Sun, @skyesun, 2023/04/14
 - Jordy Delgado, @Jdelgad8, 2023/04/17
 - Howard Do, @howarddo2208, 2023/04/20
+- 三咲智子 Kevin Deng, @sxzz, 2023/04/21
+- Moeyua, @moeyua, 2023/04/22
+- Shishu, @shishudesu, 2023/05/19
+- Kushagra Singh, @kush002, 2023/06/28
+- Sarvesh Kumar, @sarvesh521 2023/08/25
+- 微扰理论 Qinghao Huang, @wfnuser 2023/09/29

@@ -7,19 +7,26 @@
       [
         "electron",
         "server",
-        "web",
+        "core",
         "docs",
+        "storybook",
         "component",
         "workspace",
         "env",
+        "graphql",
         "cli",
         "hooks",
         "i18n",
-        "jotai",
-        "octobase-node",
+        "native",
         "templates",
         "y-indexeddb",
-        "debug"
+        "y-provider",
+        "debug",
+        "storage",
+        "infra",
+        "plugin-cli",
+        "sdk",
+        "plugin"
       ]
     ]
   }
